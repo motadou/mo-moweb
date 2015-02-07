@@ -1,0 +1,6 @@
+{
+	"docroot"  : "E:\\t\\motadou.github.io\\_site",
+	"host"	   : "192.168.3.100",
+	"port"	   : 80,
+	"filter"   : "./filter/filter.js"
+}
