@@ -1,7 +1,7 @@
 {
   "main": "httpserver.js",
   "name": "mo-webserver",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A very simple webserver.",
   "homepage": "http://motadou.github.io",
   "author": {
@@ -17,14 +17,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/motadou/mo-configure.git"
+    "url": "https://github.com/motadou/mo-webserver.git"
   },
   "bugs": {
-    "url": "https://github.com/motadou/mo-configure/issues"
+    "url": "https://github.com/motadou/mo-webserver/issues"
   },
-  "readme": "ERROR: No README data found!",
-  "_id": "mo-configure@0.1.4",
-  "scripts": {},
-  "_shasum": "98ea71ef43453f1613e7093fdf5fd4dce8ea67b0",
-  "_from": "mo-configure@*"
+  "readme": "readme.md"
 }
