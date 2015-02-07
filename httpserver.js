@@ -139,7 +139,7 @@ function staticResHandler(request, response, filepath, ext) {
 }
 
 function printAccessLog(request, status) {
-	console.log(request.remoteAddress, "--", "\"" + request.method + " " + request.url + " HTTP/1.1\"", status);
+	console.log(request.remoteAddress, "--", "[", new Date().toGMTString(), "]", "\"" + request.method + " " + request.url + " HTTP/1.1\"", status);
 }
 
 //得到ContentType
