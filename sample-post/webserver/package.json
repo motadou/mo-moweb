@@ -1,0 +1,11 @@
+{
+  "name": "moweb-post-test",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "moweb ./config.json"
+  },
+  "dependencies": {
+    "formidable": "latest"
+  }
+}

@@ -1,0 +1,6 @@
+{
+	"docroot"  : "./htdocs",
+	"host"	   : "127.0.0.1",
+	"port"	   : 8080,
+    "F404"     : "./htdocs/404.html"
+}
