@@ -13,6 +13,7 @@ var path        = require('path');
 
 var handle = {};
 handle.processRequest = function (req, res) {
+
     var form = new formidable.IncomingForm();
 
     form.uploadDir = './upload';
@@ -30,9 +31,11 @@ handle.processRequest = function (req, res) {
 
         fs.renameSync(files.fileName.path, "./upload/" + (new Date()).getTime() + path.extname(files.fileName.name));
 
-        var msg = { "code": 0, "msg" : "success" };
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify(msg));
+        var msg = { "code": 2, "msg" : "success" };
+        res.writeHead(200, { "Content-Type": "text/html" });
+
+        res.write(JSON.stringify(msg));
+        res.end();
     });
 }
 
