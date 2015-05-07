@@ -1,5 +1,5 @@
 {
-  "main": "httpserver.js",
+  "main": "../core/httpserver.js",
   "name": "moweb",
   "version": "0.0.5",
   "description": "A very simple webserver.",

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 
-var main = require("../httpserver.js");
+var main = require("../core/httpserver.js");
 
 main();
