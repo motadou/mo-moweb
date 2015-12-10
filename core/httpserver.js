@@ -12,9 +12,9 @@ var path = require('path');
 
 //默认配置项
 var config = {
-    host	: '127.0.0.1',
-	port	: 8080,
-	docroot	: './htdocs',
+    host	: '0.0.0.0',
+	port	: 80,
+	docroot	: './',
 	filter 	: undefined
 };
 

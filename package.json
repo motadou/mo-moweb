@@ -1,7 +1,7 @@
 {
   "main": "../core/httpserver.js",
   "name": "moweb",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A very simple webserver.",
   "homepage": "http://motadou.github.io",
   "author": {
