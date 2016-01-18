@@ -2,13 +2,14 @@
  ** A very simple webserver.
  **
  ** Anchor : motadou@126.com
- ** Blog   : motadou.cnblogs.com
+ ** Blog   : www.easenote.com
  **
  ***/
 var http = require('http');
 var url  = require('url');
 var fs   = require('fs');
 var path = require('path');
+var net  = require('net');
 
 //默认配置项
 var config = {
@@ -17,6 +18,8 @@ var config = {
 	docroot	: './',
 	filter 	: undefined
 };
+
+var os = require('os');  
 
 //主函数
 function main() {
@@ -31,22 +34,39 @@ function main() {
             config.docroot = complete(uconfig.docroot || config.docroot);
 			config.filter  = uconfig.filter?require(complete(uconfig.filter)):undefined;
             config.F404    = uconfig.F404;
-		}	
+		}
 
 		//开始HTTP服务器
-		http.createServer(processRequestRoute).listen(config.port, config.host);	
+		http.createServer(processRequestRoute).listen(config.port, config.host);
 
 		console.log("moweb has started.");
         console.log("configure : [", configFilePath, "]");
 		console.log("listen at : [", config.host + ":" + config.port, "]");
 		console.log("docroot   : [", config.docroot, "]");
-        console.log("");
+        console.log("localIPs  : [", getLocalIps().join(", "), "]");
 	});
 }
 
 module.exports = main;
 
-//将相对路径转换成系统所用的绝对路径
+// 获取本机的IP地址
+function getLocalIps() {
+	var ifaces = os.networkInterfaces(); 
+	var ips    = ['127.0.0.1'];
+
+	for (var dev in ifaces) {  
+		ifaces[dev].forEach(function (details) {  
+			if (net.isIPv4(details.address)) { 
+				ips.push(details.address);
+			}
+		});
+		break;  
+	}  
+
+	return ips;
+}
+
+// 将相对路径转换成系统所用的绝对路径
 function complete(sFilePath) {
 	if (path.isAbsolute(sFilePath)) {
 		return sFilePath;
@@ -59,11 +79,11 @@ function isLocalHtmlFile(path) {
     return path.indexOf("cgi-bin") == -1;
 }
 
-//路由URL
+// 路由URL
 function processRequestRoute(request, response) {
 	request.remoteAddress = request.socket.remoteAddress;
 
-    //STEP01 访问策略控制
+    // STEP01 访问策略控制
     if (config.denyAccess && config.denyAccess.length > 0) {
         var islocal = false;
         var remoteAddress = request.connection.remoteAddress;
@@ -84,44 +104,47 @@ function processRequestRoute(request, response) {
         }
     }
 
-    //STEP02 调用第一个中间件入口函数，规正化URL
+    // STEP02 调用第一个中间件入口函数，规正化URL
     var pathname = url.parse(request.url).pathname;
-    if (pathname === '/') {
-        pathname = "/index.html";
-    }
 	if (config.filter && config.filter.path_url) {
 		pathname = config.filter.path_url(pathname);
 	}
 
     //STEP03 得到本地文件的对应信息
 	var sLocalFile = path.normalize(config.docroot + "/" + pathname);
-    var isHtmlFile = isLocalHtmlFile(pathname);
 
-    fs.exists(sLocalFile, function (exists) {
-        //STEP01 处理资源404的情况
-        if (!exists) {
-            return HttpStatusHandle.process_404(request, response);
-        }
+	fs.stat(sLocalFile, function (err, stat) {
+		if (err) {
+			return HttpStatusHandle.process_404(request, response);
+		}
 
-        //STEP02 处理静态资源的情况
-        if (isHtmlFile) {
-            return staticResHandle(request, response, sLocalFile); //静态资源
-        }
+		if(stat.isFile()) {
+			//STEP02 处理静态资源的情况
+			if (isLocalHtmlFile(pathname)) {
+				return staticResHandle(request, response, sLocalFile); //静态资源
+			}
 
-        //STEP03 处理动态资源的情况
-        try {
-            var handle = require(sLocalFile);
-            if (handle.processRequest && typeof handle.processRequest === 'function') {
-                handle.processRequest(request, response); //动态资源
-            }
-        } catch (exception) {
-            response.writeHead(500, { "Content-Type": "text/plain" });
-            response.end("Server Error:" + exception);
-        }
-    });
+			//STEP03 处理动态资源的情况
+			try {
+				var handle = require(sLocalFile);
+				if (handle.processRequest && typeof handle.processRequest === 'function') {
+					handle.processRequest(request, response); //动态资源
+				}
+			} catch (exception) {
+				response.writeHead(500, { "Content-Type": "text/plain" });
+				response.end("Server Error:" + exception);
+			}
+
+			return ;
+		}
+
+		if(stat.isDirectory()) {
+			staticResDir(sLocalFile, response);
+		}
+	});
 }
 
-//状态码处理，比如404，302，301等
+// 状态码处理，比如404，302，301等
 var HttpStatusHandle  = {};
 HttpStatusHandle.F404 = {
     exist   : 0,
@@ -153,7 +176,7 @@ HttpStatusHandle.process_404 = function (request, response) {
     }
 }
 
-//处理静态资源
+// 处理静态资源
 function staticResHandle(request, response, filepath) {
     fs.readFile(filepath, "binary", function (error, file) {
         if (error) {
@@ -167,11 +190,46 @@ function staticResHandle(request, response, filepath) {
     });
 }
 
+// 处理访问目录
+function staticResDir(DirPath, response) {
+	fs.readdir(DirPath, function (err, files) {
+		if(err) {
+			console.error(err);
+			return;
+		} else {
+			var sHtml  = "root :";
+			var iIndex = 0;
+			files.forEach(function (file) {
+				var filePath = path.normalize(DirPath + "/" + file);
+
+				fs.stat(filePath, function (err, stat) {
+					iIndex++;
+					if (err) {
+						return ;
+					}
+
+					if(stat.isFile()) {
+						sHtml += "<br /><a href='/" + filePath + "'>" + filePath + "</a>";
+					}
+					if(stat.isDirectory()) {
+						sHtml += "<br /><a href='/" + filePath + "'>" + filePath + "</a>";
+					}
+
+					if (iIndex == files.length) {
+						response.writeHead(200, { "Content-Type": "text/html"});
+						response.end(sHtml);
+					}
+				});
+			});
+		}
+	});
+}
+
 function printAccessLog(request, status) {
 	console.log(request.remoteAddress, "--", "[", new Date().toGMTString(), "]", "\"" + request.method + " " + request.url + " HTTP/1.1\"", status);
 }
 
-//得到ContentType
+// 得到ContentType
 function getContentTypeByExt(ext) {
     ext = ext.toLowerCase();
     if (ext === '.htm' || ext === '.html')
